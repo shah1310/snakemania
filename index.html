@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>	<meta charset="UTF-8">
+<title>Snakenxia </title>
+<style>
+#container {
+height: 400px;
+width: 600px;
+position: relative;
+background-color:yellow ;
+border: 3px solid black;
+}
+#player {
+position: absolute;
+height: 20px;
+width: 20px;
+background-color:darkgreen ;
+left: 80px;
+bottom: 180px;
+}
+#div{
+	font-size:30px;
+	}
+</style>
+</head>
+<body>
+<marquee><h1>Design and developed by Purvi</h1></marquee>
+<div id="container">
+<div id="player"></div>
+</div>
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+var player = $("#player")[0];
+var container = $("#container")[0];
+
+var score = 0;
+newScore();
+
+var gameSpeed = 100;
+var gameOver = false;
+var stepped = false;
+var ctnrHeight = 400;
+var ctnrWidth = 600;
+var gameStarted = false;
+var playerSize = 20;
+var speedX = 0;
+var speedY = 0;
+var playerX = 80;
+var playerY = 180;
+var tail = [];
+newTail(40, 180, "lightgreen");
+newTail(60, 180, "lightgreen");
+var food = newFood();
+var tailInProgress = false;
+function anim(e)
+{
+if (stepped)
+{
+switch(e.keyCode)
+{
+case 39:
+if (speedX != -playerSize)
+{
+stepped = false;
+speedX = playerSize;
+speedY = 0;
+}
+break;
+case 37:
+if (speedX != playerSize)
+{
+stepped = false;
+speedX = -playerSize;
+speedY = 0;
+}
+break;
+case 38:
+if (speedY != -playerSize)
+{
+stepped = false;
+speedX = 0;
+speedY = playerSize;
+}
+break;
+case 40:
+if (speedY != playerSize)
+{
+stepped = false;
+speedX = 0;
+speedY = -playerSize;
+}
+break;
+}
+}
+}
+function newScore()
+{
+var plrScore = newCanvas("score", 105, 210);
+plrScore.style.right = 0 + "px";
+plrScore.style.bottom = ctnrHeight + "px";
+plrScore.style.zIndex = "1";
+plrScore.style.opacity = 0.7;
+var ctx = plrScore.getContext("2d");
+ctx.font = "25px Arial";
+ctx.fillText("Score: " + score, 50, 45);
+}
+function updateScore()
+{
+var ctx = document.getElementById("score").getContext("2d");
+ctx.clearRect(0, 0, 275, 75);
+score += 10;
+ctx.fillText("Score: " + score, 50, 45);
+} 
+function newTail(x, y, color = "blue")
+{
+var index = tail.length;
+tail.push(newCanvas("tail" + index.toString()));
+tail[index].style.background = color;
+tail[index].style.left = x + "px";
+tail[index].style.bottom = y + "px";
+}
+function newFood()
+{
+while ((playerX == x && playerY == y || tail.some(e => e.style.left == (x + "px") && e.style.bottom == (y + "px"))) || x == undefined)
+{
+
+var x = Math.floor(Math.random() * ((ctnrWidth - playerSize) / playerSize + 1)) * playerSize;
+var y = Math.floor(Math.random() * ((ctnrHeight - playerSize) / playerSize + 1)) * playerSize;
+}
+var food = newCanvas("food");
+food.style.background = "red";
+food.style.left = x + "px";
+food.style.bottom = y + "px";
+return document.getElementById("food");
+}
+function newCanvas(id, height = playerSize, width = playerSize)
+{
+var canv = document.createElement("canvas");
+canv.id = id;
+document.getElementById("container").appendChild(canv);
+canv.style.position = "absolute";
+canv.style.height = height + "px";
+canv.style.width = width + "px";
+return canv;
+}
+function movementUpdate()
+{
+
+wallCollision();
+playerX += speedX;
+playerY += speedY;
+tailCollision();
+if (!gameOver)
+	{
+if (speedX != 0 || speedY != 0)
+{
+if (tailInProgress)
+{
+tailInProgress = false;
+tail[tail.length - 1].style.background = "lightgreen";
+}
+for (let i = 0; i < tail.length - 1; i++)
+{
+tail[i].style.left = tail[i + 1].style.left;
+tail[i].style.bottom = tail[i + 1].style.bottom;
+}
+tail[tail.length - 1].style.left = player.style.left;
+tail[tail.length - 1].style.bottom = player.style.bottom;
+}
+player.style.left = playerX + "px";
+player.style.bottom = playerY + "px";
+}
+}
+function wallCollision()
+{
+if (playerX >= ctnrWidth - playerSize && speedX > 0)
+playerX = -playerSize;
+else if (playerX <= 0 && speedX < 0)
+playerX = ctnrWidth;
+else if (playerY >= ctnrHeight - playerSize && speedY > 0)
+playerY = -playerSize;
+else if (playerY <= 0 && speedY < 0)
+playerY = ctnrHeight;
+}
+function tailCollision()
+{
+for (var i = 0; i < tail.length; i++)
+{
+if (tail[i] == tail[tail.length - 1])
+continue;
+var tmpT = tail[i].style;
+if (tmpT.left == playerX + "px" && tmpT.bottom == playerY + "px")
+{
+tmpT.background = "red";
+speedX = 0;
+speedY = 0;
+gameOver = true;
+newCanvas("gameOver", 400, 600);
+break;
+}
+}
+}
+function timeEvent()
+{
+if (!gameStarted)
+{
+gameStarted = true;
+var interval = setInterval(function()
+{
+movementUpdate();
+stepped = true;
+if (food.style.left == playerX + "px" && food.style.bottom == playerY + "px")
+{
+updateScore();
+food.remove(food.selectedIndex);
+food = newFood();
+newTail(playerX, playerY);
+tailInProgress = true;
+}
+if (gameOver)
+{
+clearInterval(interval);
+}
+}, gameSpeed);
+}
+}
+document.onkeydown = anim;
+
+</script>
+<script type="text/javascript">
+$( document ).ready(function() {
+timeEvent();
+});
+</script><br>
+<div id="div"> Move the snake by using "Arrow keys"</div>
+</body>
+</html>
